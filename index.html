@@ -170,32 +170,39 @@
                     </thead>
                     <tbody class="text-sm">
                         <tr class="border-b hover:bg-gray-50 transition">
-                            <td class="p-3 font-semibold">New Product Listings (T-30)</td>
+                            <td class="p-3 font-semibold">New Listings (T-30)</td>
                             <td id="data-new-listings" class="p-3">--</td>
-                            <td class="p-3 text-gray-400">50+ SKCs</td>
+                            <td class="p-3 text-gray-400">≥10 SKCs</td>
                             <td class="p-3 text-center"><span id="pill-listings" class="status-pill">--</span></td>
-                            <td class="p-3 italic text-gray-500" contenteditable="true">Slow upload rate decreases trend exposure.</td>
+                            <td class="p-3 italic text-gray-500" contenteditable="true">Maintenance of selection freshness is key for traffic.</td>
+                        </tr>
+                        <tr class="border-b hover:bg-gray-50 transition">
+                            <td class="p-3 font-semibold">Active Sold SKCs</td>
+                            <td id="data-active-skc" class="p-3">--</td>
+                            <td class="p-3 text-gray-400">≥30 SKCs</td>
+                            <td class="p-3 text-center"><span id="pill-active-skc" class="status-pill">--</span></td>
+                            <td class="p-3 italic text-gray-500" contenteditable="true">Efficiency of live listings in generating sales.</td>
                         </tr>
                         <tr class="border-b hover:bg-gray-50 transition">
                             <td class="p-3 font-semibold">Event Registration Rate</td>
                             <td id="data-events" class="p-3">--</td>
-                            <td class="p-3 text-gray-400">>80%</td>
+                            <td class="p-3 text-gray-400">≥50%</td>
                             <td class="p-3 text-center"><span id="pill-events" class="status-pill">--</span></td>
-                            <td class="p-3 italic text-gray-500" contenteditable="true">Improve participation to maximize traffic.</td>
+                            <td class="p-3 italic text-gray-500" contenteditable="true">Participation in campaigns boosts exposure.</td>
                         </tr>
                         <tr class="border-b hover:bg-gray-50 transition">
                             <td class="p-3 font-semibold">72h Collection Rate</td>
                             <td id="data-72h" class="p-3">--</td>
-                            <td class="p-3 text-gray-400">>95%</td>
+                            <td class="p-3 text-gray-400">>90%</td>
                             <td class="p-3 text-center"><span id="pill-72h" class="status-pill">--</span></td>
-                            <td class="p-3 italic text-gray-500" contenteditable="true">Logistics speed directly impacts ranking.</td>
+                            <td class="p-3 italic text-gray-500" contenteditable="true">Timely fulfillment ensures ranking stability.</td>
                         </tr>
                         <tr class="border-b hover:bg-gray-50 transition">
                             <td class="p-3 font-semibold">Lost Sales Rate (OOS)</td>
                             <td id="data-lost-sales" class="p-3">--</td>
-                            <td class="p-3 text-gray-400"><5%</td>
+                            <td class="p-3 text-gray-400">&lt;8%</td>
                             <td class="p-3 text-center"><span id="pill-lost-sales" class="status-pill">--</span></td>
-                            <td class="p-3 italic text-gray-500" contenteditable="true">Out of stock impact on hot sellers.</td>
+                            <td class="p-3 italic text-gray-500" contenteditable="true">Impact of stock-outs on potential revenue.</td>
                         </tr>
                     </tbody>
                 </table>
@@ -217,24 +224,7 @@
                     <div class="action-card relative bg-white p-4 border rounded shadow-sm group">
                         <button onclick="this.parentElement.remove()" class="delete-action-btn no-print absolute -top-2 -right-2 bg-red-500 text-white w-5 h-5 rounded-full text-[10px] flex items-center justify-center opacity-0 transition hover:bg-red-700">×</button>
                         <label class="text-[10px] font-bold text-gray-400 block mb-1 uppercase tracking-wider" contenteditable="true">Action Item 1</label>
-                        <p class="text-sm font-semibold text-gray-800 leading-tight mb-4" contenteditable="true">Click to edit strategic action description...</p>
-                        <div class="flex justify-between items-end">
-                            <div class="text-[10px] text-gray-400 uppercase font-medium">DDL: <span contenteditable="true" class="font-bold text-black border-b border-gray-300 px-1">TBD</span></div>
-                            <div class="text-[10px] text-gray-400 uppercase font-medium">
-                                OWNER: 
-                                <select class="owner-select">
-                                    <option value="Seller">Seller</option>
-                                    <option value="AM">AM</option>
-                                    <option value="Other">Other</option>
-                                </select>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Default Action Card 2 -->
-                    <div class="action-card relative bg-white p-4 border rounded shadow-sm group">
-                        <button onclick="this.parentElement.remove()" class="delete-action-btn no-print absolute -top-2 -right-2 bg-red-500 text-white w-5 h-5 rounded-full text-[10px] flex items-center justify-center opacity-0 transition hover:bg-red-700">×</button>
-                        <label class="text-[10px] font-bold text-gray-400 block mb-1 uppercase tracking-wider" contenteditable="true">Action Item 2</label>
-                        <p class="text-sm font-semibold text-gray-800 leading-tight mb-4" contenteditable="true">Click to edit strategic action description...</p>
+                        <p class="text-sm font-semibold text-gray-800 leading-tight mb-4 italic" contenteditable="true">Click to edit strategic action description...</p>
                         <div class="flex justify-between items-end">
                             <div class="text-[10px] text-gray-400 uppercase font-medium">DDL: <span contenteditable="true" class="font-bold text-black border-b border-gray-300 px-1">TBD</span></div>
                             <div class="text-[10px] text-gray-400 uppercase font-medium">
@@ -271,7 +261,7 @@
             card.innerHTML = `
                 <button onclick="this.parentElement.remove()" class="delete-action-btn no-print absolute -top-2 -right-2 bg-red-500 text-white w-5 h-5 rounded-full text-[10px] flex items-center justify-center opacity-0 transition hover:bg-red-700">×</button>
                 <label class="text-[10px] font-bold text-gray-400 block mb-1 uppercase tracking-wider" contenteditable="true">Action Item ${cardCount}</label>
-                <p class="text-sm font-semibold text-gray-800 leading-tight mb-4" contenteditable="true">Click to edit strategic action description...</p>
+                <p class="text-sm font-semibold text-gray-800 leading-tight mb-4 italic" contenteditable="true">Click to edit strategic action description...</p>
                 <div class="flex justify-between items-end">
                     <div class="text-[10px] text-gray-400 uppercase font-medium">DDL: <span contenteditable="true" class="font-bold text-black border-b border-gray-300 px-1">TBD</span></div>
                     <div class="text-[10px] text-gray-400 uppercase font-medium">
@@ -361,24 +351,31 @@
                 updateTrend('comp-trend-skc', skcGrowth, ' units');
             }
 
-            // Diagnostics (Latest Month)
+            // Diagnostics (Based on new Benchmarks)
+            // 1. Listings (Target >= 10)
             const listingsCount = parseInt(getFuzzy(latest, 't-30~t-1上新数') || 0);
-            updateKPI('data-new-listings', 'pill-listings', listingsCount, 50, 'more', ' SKCs');
+            updateKPI('data-new-listings', 'pill-listings', listingsCount, 10, 'more', ' SKCs');
 
+            // 2. Active Sold SKC (Target >= 30)
+            updateKPI('data-active-skc', 'pill-active-skc', currSKC, 30, 'more', ' SKCs');
+
+            // 3. Event Rate (Target >= 50%)
             const avail = parseInt(getFuzzy(latest, 't-30~t-1活动可报名数') || 0);
             const done = parseInt(getFuzzy(latest, 't-30~t-1活动已报名数') || 0);
             const eventRate = avail > 0 ? (done / avail) * 100 : 0;
-            updateKPI('data-events', 'pill-events', eventRate, 80, 'more', '%');
+            updateKPI('data-events', 'pill-events', eventRate, 50, 'more', '%');
 
+            // 4. Fulfillment (Target > 90%)
             const den72 = parseFloat(getFuzzy(latest, '72h揽收率分母') || 0);
             const mol72 = parseFloat(getFuzzy(latest, '72h揽收率分子') || 0);
-            const rate72 = den72 > 0 ? (mol72 / den72) * 100 : 100;
-            updateKPI('data-72h', 'pill-72h', rate72, 95, 'more', '%');
+            const rate72 = den72 > 0 ? (mol72 / den72) * 100 : 0;
+            updateKPI('data-72h', 'pill-72h', rate72, 90, 'more', '%');
 
+            // 5. OOS Rate (Target < 8%)
             const denLS = parseFloat(getFuzzy(latest, '断码销额占比分母') || 0);
             const molLS = parseFloat(getFuzzy(latest, '断码销额占比分子') || 0);
             const rateLS = denLS > 0 ? (molLS / denLS) * 100 : 0;
-            updateKPI('data-lost-sales', 'pill-lost-sales', rateLS, 5, 'less', '%');
+            updateKPI('data-lost-sales', 'pill-lost-sales', rateLS, 8, 'less', '%');
         }
 
         function updateTrend(id, value, suffix) {
@@ -393,13 +390,18 @@
             const pillElem = document.getElementById(pillId);
             textElem.textContent = `${value.toFixed(1)}${unit}`;
             let status = 'good';
+            
+            // Logic for "Higher is Better" (Listings, SKCs, Events, Fulfillment)
             if (direction === 'more') {
-                if (value < (benchmark * 0.5)) status = 'critical';
+                if (value < (benchmark * 0.7)) status = 'critical';
                 else if (value < benchmark) status = 'fair';
-            } else {
-                if (value > (benchmark * 2)) status = 'critical';
+            } 
+            // Logic for "Lower is Better" (OOS Rate)
+            else {
+                if (value > (benchmark * 1.5)) status = 'critical';
                 else if (value > benchmark) status = 'fair';
             }
+            
             pillElem.textContent = status;
             pillElem.className = `status-pill status-${status}`;
         }
