@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SHEIN AM Strategic Analysis Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS for Excel Parsing -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        @media print {
+            .no-print { display: none !important; }
+            body { background: white !important; padding: 0 !important; }
+            .print-container { 
+                box-shadow: none !important; 
+                border: none !important; 
+                width: 100% !important; 
+                max-width: 100% !important; 
+                margin: 0 !important; 
+            }
+            .delete-action-btn { display: none !important; }
+            select {
+                appearance: none;
+                -webkit-appearance: none;
+                border: none !important;
+                background: transparent !important;
+                padding: 0 !important;
+                font-weight: bold !important;
+                color: black !important;
+            }
+        }
+        .status-pill {
+            padding: 4px 12px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-good { background-color: #def7ec; color: #03543f; }
+        .status-fair { background-color: #fef3c7; color: #92400e; }
+        .status-critical { background-color: #fde8e8; color: #9b1c1c; }
+        .trend-up { color: #057a55; }
+        .trend-down { color: #e02424; }
+        
+        .action-card:hover .delete-action-btn {
+            opacity: 1;
+        }
+
+        .owner-select {
+            background: transparent;
+            border-bottom: 1px solid #d1d5db;
+            font-weight: 700;
+            color: black;
+            outline: none;
+            cursor: pointer;
+            padding: 0 4px;
+        }
+        .owner-select:focus {
+            border-bottom-color: black;
+        }
+
+        .skc-img {
+            width: 40px;
+            height: 52px;
+            object-fit: cover;
+            border-radius: 4px;
+            background: #f3f4f6;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-900 font-sans min-h-screen">
+
+    <!-- Uploader Section -->
+    <div class="no-print max-w-6xl mx-auto p-6 space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Seller Report Upload -->
+            <div class="bg-white p-6 rounded-lg shadow-md border-2 border-dashed border-gray-300 text-center">
+                <h2 class="text-lg font-bold mb-1">1. Seller Report</h2>
+                <p class="text-xs text-gray-500 mb-4">Upload Header + Latest + Prev rows.</p>
+                <input type="file" id="fileInput" accept=".xlsx, .xls, .csv" class="hidden">
+                <button onclick="document.getElementById('fileInput').click()" class="bg-black text-white px-4 py-2 rounded font-bold hover:bg-gray-800 transition text-sm">
+                    Upload Performance
+                </button>
+            </div>
+            <!-- SKC Data Upload -->
+            <div class="bg-white p-6 rounded-lg shadow-md border-2 border-dashed border-gray-300 text-center">
+                <h2 class="text-lg font-bold mb-1">2. SKC Detail Data</h2>
+                <p class="text-xs text-gray-500 mb-4">Upload SKC list to analyze Top 10 items.</p>
+                <input type="file" id="skcInput" accept=".xlsx, .xls, .csv" class="hidden">
+                <button onclick="document.getElementById('skcInput').click()" class="bg-blue-600 text-white px-4 py-2 rounded font-bold hover:bg-blue-700 transition text-sm">
+                    Upload SKC Data
+                </button>
+            </div>
+        </div>
+        <p id="debug-msg" class="text-red-500 text-xs mt-2 hidden text-center"></p>
+    </div>
+
+    <!-- Dashboard Container -->
+    <div id="dashboard" class="print-container max-w-6xl mx-auto bg-white shadow-xl rounded-lg overflow-hidden border border-gray-200 mb-10 mt-4 transition-opacity duration-300 opacity-50 pointer-events-none">
+        
+        <!-- Header -->
+        <div class="bg-black text-white p-6 flex justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold tracking-tighter italic">SHEIN <span class="font-normal not-italic text-sm ml-2 uppercase tracking-widest">AM Strategic Dashboard</span></h1>
+                <p class="text-gray-400 text-xs mt-1">Data-Driven Performance Review</p>
+            </div>
+            <button id="printBtn" class="no-print bg-white text-black px-4 py-2 rounded font-bold text-sm hover:bg-gray-200 transition">
+                Download PDF
+            </button>
+        </div>
+
+        <!-- Section 1: Seller Info -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 p-6 border-b border-gray-100 bg-gray-50">
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Account Manager (AM)</label>
+                <div id="ui-am-cat" class="font-bold text-xl text-black">---</div>
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Shop Name & ID</label>
+                <div id="ui-shop-name" class="font-semibold text-lg">---</div>
+                <div id="ui-category" class="text-xs text-blue-600 font-bold uppercase mt-1 tracking-tight">---</div>
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Top 1 Category</label>
+                <div id="ui-top-cat" class="font-semibold text-lg">---</div>
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Current Tier</label>
+                <div id="ui-tier" class="font-semibold text-lg uppercase">---</div>
+            </div>
+        </div>
+
+        <!-- Section 2: KPIs & Comparison -->
+        <div class="p-6">
+            <h2 class="text-lg font-bold mb-4 flex items-center">
+                <span class="w-1.5 h-6 bg-black mr-2"></span>
+                Sales Performance & MoM Comparison
+            </h2>
+            
+            <div class="grid grid-cols-1 gap-4 mb-6">
+                <div class="border rounded-lg p-4 bg-gray-50">
+                    <p class="text-xs text-gray-500 font-bold uppercase">Latest 30D Sales</p>
+                    <div id="ui-30d-gmv" class="text-2xl font-bold mt-1">$0.00</div>
+                </div>
+            </div>
+
+            <!-- Comparison Table -->
+            <div class="overflow-x-auto mb-10 border rounded-lg shadow-sm">
+                <table class="w-full text-left text-sm">
+                    <thead>
+                        <tr class="bg-gray-100 border-b">
+                            <th class="p-3 font-bold uppercase text-[10px] text-gray-600">Metric</th>
+                            <th class="p-3 font-bold uppercase text-[10px] text-gray-600">Previous Period</th>
+                            <th class="p-3 font-bold uppercase text-[10px] text-gray-600">Latest Period</th>
+                            <th class="p-3 font-bold uppercase text-[10px] text-gray-600">Trend / MoM</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr class="border-b">
+                            <td class="p-3 font-semibold">30D Sales Amount</td>
+                            <td id="comp-prev-gmv" class="p-3 text-gray-500">$0.00</td>
+                            <td id="comp-curr-gmv" class="p-3 font-bold">$0.00</td>
+                            <td id="comp-trend-gmv" class="p-3 font-bold">--</td>
+                        </tr>
+                        <tr class="border-b">
+                            <td class="p-3 font-semibold">Active Sold SKC</td>
+                            <td id="comp-prev-skc" class="p-3 text-gray-500">0</td>
+                            <td id="comp-curr-skc" class="p-3 font-bold">0</td>
+                            <td id="comp-trend-skc" class="p-3 font-bold">--</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Section 3: Diagnostics -->
+            <h2 class="text-lg font-bold mb-4 flex items-center">
+                <span class="w-1.5 h-6 bg-black mr-2"></span>
+                Core Behavioral Diagnostics (Pain Points)
+            </h2>
+            <div class="overflow-x-auto mb-8">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-gray-100 text-[10px] font-bold uppercase text-gray-600 tracking-wider">
+                            <th class="p-3 border">Key Indicator</th>
+                            <th class="p-3 border">Current Data</th>
+                            <th class="p-3 border">Benchmark</th>
+                            <th class="p-3 border text-center">Status</th>
+                            <th class="p-3 border">Strategic Observation</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm">
+                        <tr class="border-b hover:bg-gray-50 transition">
+                            <td class="p-3 font-semibold">New Listings (T-30)</td>
+                            <td id="data-new-listings" class="p-3">--</td>
+                            <td class="p-3 text-gray-400">≥10 SKCs</td>
+                            <td class="p-3 text-center"><span id="pill-listings" class="status-pill">--</span></td>
+                            <td class="p-3 italic text-gray-500" contenteditable="true">Maintenance of selection freshness is key for traffic.</td>
+                        </tr>
+                        <tr class="border-b hover:bg-gray-50 transition">
+                            <td class="p-3 font-semibold">Active Sold SKCs</td>
+                            <td id="data-active-skc" class="p-3">--</td>
+                            <td class="p-3 text-gray-400">≥30 SKCs</td>
+                            <td class="p-3 text-center"><span id="pill-active-skc" class="status-pill">--</span></td>
+                            <td class="p-3 italic text-gray-500" contenteditable="true">Efficiency of live listings in generating sales.</td>
+                        </tr>
+                        <tr class="border-b hover:bg-gray-50 transition">
+                            <td class="p-3 font-semibold">Event Registration Rate</td>
+                            <td id="data-events" class="p-3">--</td>
+                            <td class="p-3 text-gray-400">≥50%</td>
+                            <td class="p-3 text-center"><span id="pill-events" class="status-pill">--</span></td>
+                            <td class="p-3 italic text-gray-500" contenteditable="true">Participation in campaigns boosts exposure.</td>
+                        </tr>
+                        <tr class="border-b hover:bg-gray-50 transition">
+                            <td class="p-3 font-semibold">72h Collection Rate</td>
+                            <td id="data-72h" class="p-3">--</td>
+                            <td class="p-3 text-gray-400">>90%</td>
+                            <td class="p-3 text-center"><span id="pill-72h" class="status-pill">--</span></td>
+                            <td class="p-3 italic text-gray-500" contenteditable="true">Timely fulfillment ensures ranking stability.</td>
+                        </tr>
+                        <tr class="border-b hover:bg-gray-50 transition">
+                            <td class="p-3 font-semibold">Lost Sales Rate (OOS)</td>
+                            <td id="data-lost-sales" class="p-3">--</td>
+                            <td class="p-3 text-gray-400">&lt;8%</td>
+                            <td class="p-3 text-center"><span id="pill-lost-sales" class="status-pill">--</span></td>
+                            <td class="p-3 italic text-gray-500" contenteditable="true">Impact of stock-outs on potential revenue.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Section 4: Action Plan -->
+            <div class="bg-gray-50 rounded-lg p-6 border border-gray-200 mb-8">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold flex items-center">
+                        <span class="w-1.5 h-6 bg-black mr-2"></span>
+                        Action Plan
+                    </h2>
+                    <button onclick="addActionCard()" class="no-print bg-black text-white text-[10px] font-bold px-3 py-1.5 rounded hover:bg-gray-700 transition uppercase tracking-wider">
+                        + Add Action
+                    </button>
+                </div>
+                <div id="action-plan-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- Default Action Card 1 -->
+                    <div class="action-card relative bg-white p-4 border rounded shadow-sm group">
+                        <button onclick="this.parentElement.remove()" class="delete-action-btn no-print absolute -top-2 -right-2 bg-red-500 text-white w-5 h-5 rounded-full text-[10px] flex items-center justify-center opacity-0 transition hover:bg-red-700">×</button>
+                        <label class="text-[10px] font-bold text-gray-400 block mb-1 uppercase tracking-wider" contenteditable="true">Action Item 1</label>
+                        <p class="text-sm font-semibold text-gray-800 leading-tight mb-4 italic" contenteditable="true">Click to edit strategic action description...</p>
+                        <div class="flex justify-between items-end">
+                            <div class="text-[10px] text-gray-400 uppercase font-medium">DDL: <span contenteditable="true" class="font-bold text-black border-b border-gray-300 px-1">TBD</span></div>
+                            <div class="text-[10px] text-gray-400 uppercase font-medium">
+                                OWNER: 
+                                <select class="owner-select">
+                                    <option value="Seller">Seller</option>
+                                    <option value="AM">AM</option>
+                                    <option value="Other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Section 5: SKC Performance Monitoring -->
+            <div id="skc-section" class="border-t border-gray-100 pt-8">
+                <h2 class="text-lg font-bold mb-4 flex items-center">
+                    <span class="w-1.5 h-6 bg-blue-600 mr-2"></span>
+                    Top 10 SKC Performance Monitoring
+                </h2>
+                <div class="overflow-x-auto border rounded-lg shadow-sm">
+                    <table class="w-full text-left text-xs">
+                        <thead>
+                            <tr class="bg-gray-100 border-b">
+                                <th class="p-2 font-bold uppercase text-[9px] text-gray-500">Image</th>
+                                <th class="p-2 font-bold uppercase text-[9px] text-gray-500">SKC / Name</th>
+                                <th class="p-2 font-bold uppercase text-[9px] text-gray-500 text-center">Level</th>
+                                <th class="p-2 font-bold uppercase text-[9px] text-gray-500 text-center">CTR (15D)</th>
+                                <th class="p-2 font-bold uppercase text-[9px] text-gray-500 text-center">CVR (15D)</th>
+                                <th class="p-2 font-bold uppercase text-[9px] text-gray-500 text-center">UV (2-15D)</th>
+                                <th class="p-2 font-bold uppercase text-[9px] text-gray-500 text-center">Return Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody id="skc-table-body">
+                            <tr>
+                                <td colspan="7" class="p-8 text-center text-gray-400 italic">No SKC data uploaded yet.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const fileInput = document.getElementById('fileInput');
+        const skcInput = document.getElementById('skcInput');
+        const dashboard = document.getElementById('dashboard');
+        const printBtn = document.getElementById('printBtn');
+        const debugMsg = document.getElementById('debug-msg');
+        const actionContainer = document.getElementById('action-plan-container');
+        const skcTableBody = document.getElementById('skc-table-body');
+
+        printBtn.addEventListener('click', () => {
+            window.focus();
+            window.print();
+        });
+
+        function addActionCard() {
+            const cardCount = actionContainer.querySelectorAll('.action-card').length + 1;
+            const card = document.createElement('div');
+            card.className = "action-card relative bg-white p-4 border rounded shadow-sm group";
+            card.innerHTML = `
+                <button onclick="this.parentElement.remove()" class="delete-action-btn no-print absolute -top-2 -right-2 bg-red-500 text-white w-5 h-5 rounded-full text-[10px] flex items-center justify-center opacity-0 transition hover:bg-red-700">×</button>
+                <label class="text-[10px] font-bold text-gray-400 block mb-1 uppercase tracking-wider" contenteditable="true">Action Item ${cardCount}</label>
+                <p class="text-sm font-semibold text-gray-800 leading-tight mb-4 italic" contenteditable="true">Click to edit strategic action description...</p>
+                <div class="flex justify-between items-end">
+                    <div class="text-[10px] text-gray-400 uppercase font-medium">DDL: <span contenteditable="true" class="font-bold text-black border-b border-gray-300 px-1">TBD</span></div>
+                    <div class="text-[10px] text-gray-400 uppercase font-medium">
+                        OWNER: 
+                        <select class="owner-select">
+                            <option value="Seller">Seller</option>
+                            <option value="AM">AM</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+            actionContainer.appendChild(card);
+        }
+
+        // Generic Excel Reader
+        function readExcel(file, callback) {
+            const reader = new FileReader();
+            reader.onload = (evt) => {
+                try {
+                    const data = evt.target.result;
+                    const workbook = XLSX.read(data, { type: 'binary' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const rawData = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheetName]);
+                    callback(rawData);
+                } catch (err) {
+                    showError("Error processing file.");
+                }
+            };
+            reader.readAsBinaryString(file);
+        }
+
+        // 1. Performance File
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            readExcel(file, (rawData) => {
+                if (rawData && rawData.length >= 1) {
+                    debugMsg.classList.add('hidden');
+                    processSellerData(rawData);
+                } else {
+                    showError("Requires at least Header and 1 data row.");
+                }
+            });
+        });
+
+        // 2. SKC Data File
+        skcInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            readExcel(file, (rawData) => {
+                if (rawData && rawData.length >= 1) {
+                    debugMsg.classList.add('hidden');
+                    processSKCData(rawData);
+                } else {
+                    showError("SKC file appears empty.");
+                }
+            });
+        });
+
+        function showError(msg) {
+            debugMsg.textContent = msg;
+            debugMsg.classList.remove('hidden');
+        }
+
+        function getFuzzy(obj, searchKey) {
+            if (!obj) return null;
+            const keys = Object.keys(obj);
+            const foundKey = keys.find(k => k.toLowerCase().includes(searchKey.toLowerCase()));
+            return foundKey ? obj[foundKey] : null;
+        }
+
+        function processSellerData(dataRows) {
+            const latest = dataRows[0];
+            const previous = dataRows[1] || null;
+
+            dashboard.style.opacity = "1";
+            dashboard.style.pointerEvents = "all";
+
+            document.getElementById('ui-am-cat').textContent = getFuzzy(latest, '商家运营') || 'Unassigned';
+            const shopName = getFuzzy(latest, '店铺名称') || 'N/A';
+            const shopId = latest.supplier_id || 'N/A';
+            document.getElementById('ui-shop-name').textContent = `${shopName} (#${shopId})`;
+            document.getElementById('ui-category').textContent = getFuzzy(latest, '供应商二级分类') || 'N/A';
+            document.getElementById('ui-top-cat').textContent = getFuzzy(latest, 'Top1品类') || 'N/A';
+            document.getElementById('ui-tier').textContent = getFuzzy(latest, '月度商家分层') || 'TBD';
+
+            const currGMV = parseFloat(getFuzzy(latest, '近30d销额') || 0);
+            const currSKC = parseInt(getFuzzy(latest, '在售动销数') || 0);
+            document.getElementById('ui-30d-gmv').textContent = `$${currGMV.toLocaleString()}`;
+
+            const prevGMV = previous ? parseFloat(getFuzzy(previous, '近30d销额') || 0) : 0;
+            const prevSKC = previous ? parseInt(getFuzzy(previous, '在售动销数') || 0) : 0;
+
+            document.getElementById('comp-curr-gmv').textContent = `$${currGMV.toLocaleString()}`;
+            document.getElementById('comp-prev-gmv').textContent = previous ? `$${prevGMV.toLocaleString()}` : 'N/A';
+            document.getElementById('comp-curr-skc').textContent = currSKC;
+            document.getElementById('comp-prev-skc').textContent = previous ? prevSKC : 'N/A';
+
+            if (previous) {
+                const gmvGrowth = prevGMV > 0 ? ((currGMV - prevGMV) / prevGMV) * 100 : 0;
+                const skcGrowth = currSKC - prevSKC;
+                updateTrend('comp-trend-gmv', gmvGrowth, '%');
+                updateTrend('comp-trend-skc', skcGrowth, ' units');
+            }
+
+            const listingsCount = parseInt(getFuzzy(latest, 't-30~t-1上新数') || 0);
+            updateKPI('data-new-listings', 'pill-listings', listingsCount, 10, 'more', ' SKCs');
+            updateKPI('data-active-skc', 'pill-active-skc', currSKC, 30, 'more', ' SKCs');
+
+            const avail = parseInt(getFuzzy(latest, 't-30~t-1活动可报名数') || 0);
+            const done = parseInt(getFuzzy(latest, 't-30~t-1活动已报名数') || 0);
+            const eventRate = avail > 0 ? (done / avail) * 100 : 0;
+            updateKPI('data-events', 'pill-events', eventRate, 50, 'more', '%');
+
+            const den72 = parseFloat(getFuzzy(latest, '72h揽收率分母') || 0);
+            const mol72 = parseFloat(getFuzzy(latest, '72h揽收率分子') || 0);
+            const rate72 = den72 > 0 ? (mol72 / den72) * 100 : 0;
+            updateKPI('data-72h', 'pill-72h', rate72, 90, 'more', '%');
+
+            const denLS = parseFloat(getFuzzy(latest, '断码销额占比分母') || 0);
+            const molLS = parseFloat(getFuzzy(latest, '断码销额占比分子') || 0);
+            const rateLS = denLS > 0 ? (molLS / denLS) * 100 : 0;
+            updateKPI('data-lost-sales', 'pill-lost-sales', rateLS, 8, 'less', '%');
+        }
+
+        function processSKCData(dataRows) {
+            // Keep top 10
+            const top10 = dataRows.slice(0, 10);
+            skcTableBody.innerHTML = '';
+
+            top10.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.className = "border-b hover:bg-gray-50 transition";
+                
+                const imgUrl = getFuzzy(row, 'picture') || '';
+                const skcId = getFuzzy(row, 'SKC') || 'N/A';
+                const name = getFuzzy(row, 'Product English name') || 'Unnamed Product';
+                const level = getFuzzy(row, 'Product level (current)') || '-';
+                const ctr = (parseFloat(getFuzzy(row, 'CTR in the past 15 days') || 0) * 100).toFixed(2) + '%';
+                const cvr = (parseFloat(getFuzzy(row, 'Convertion rate from Product Detail Page in the past 15 days') || 0) * 100).toFixed(2) + '%';
+                const uv = parseInt(getFuzzy(row, '2~15 days of UV exposure') || 0).toLocaleString();
+                const retRate = (parseFloat(getFuzzy(row, 'Return rate') || 0) * 100).toFixed(2) + '%';
+
+                tr.innerHTML = `
+                    <td class="p-2">
+                        <img src="${imgUrl}" class="skc-img" alt="SKC" onerror="this.src='https://via.placeholder.com/40x52?text=?'">
+                    </td>
+                    <td class="p-2">
+                        <div class="font-bold text-gray-900">${skcId}</div>
+                        <div class="text-[9px] text-gray-400 truncate w-32">${name}</div>
+                    </td>
+                    <td class="p-2 text-center font-bold text-blue-600">${level}</td>
+                    <td class="p-2 text-center">${ctr}</td>
+                    <td class="p-2 text-center">${cvr}</td>
+                    <td class="p-2 text-center font-medium">${uv}</td>
+                    <td class="p-2 text-center text-red-500">${retRate}</td>
+                `;
+                skcTableBody.appendChild(tr);
+            });
+
+            // Ensure dashboard is visible if only SKC data is uploaded first
+            dashboard.style.opacity = "1";
+            dashboard.style.pointerEvents = "all";
+        }
+
+        function updateTrend(id, value, suffix) {
+            const elem = document.getElementById(id);
+            const sign = value > 0 ? '▲' : (value < 0 ? '▼' : '');
+            elem.textContent = `${sign} ${Math.abs(value).toFixed(1)}${suffix}`;
+            elem.className = `p-3 font-bold ${value >= 0 ? 'trend-up' : 'trend-down'}`;
+        }
+
+        function updateKPI(textId, pillId, value, benchmark, direction, unit) {
+            const textElem = document.getElementById(textId);
+            const pillElem = document.getElementById(pillId);
+            textElem.textContent = `${value.toFixed(1)}${unit}`;
+            let status = 'good';
+            if (direction === 'more') {
+                if (value < (benchmark * 0.7)) status = 'critical';
+                else if (value < benchmark) status = 'fair';
+            } else {
+                if (value > (benchmark * 1.5)) status = 'critical';
+                else if (value > benchmark) status = 'fair';
+            }
+            pillElem.textContent = status;
+            pillElem.className = `status-pill status-${status}`;
+        }
+    </script>
+</body>
+</html>
