@@ -7,6 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- SheetJS for Excel Parsing -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- html2canvas for Image Export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-gray-100 text-gray-900 font-sans min-h-screen">
@@ -46,9 +48,14 @@
                 <p class="text-gray-400 text-xs mt-1">Data-Driven Performance Review</p>
                 <p id="report-date" class="text-gray-500 text-xs mt-2">Report Generated: <span class="font-semibold text-gray-300">--</span></p>
             </div>
-            <button id="printBtn" class="no-print bg-white text-black px-4 py-2 rounded font-bold text-sm hover:bg-gray-200 transition">
-                Download PDF
-            </button>
+            <div class="no-print flex gap-2">
+                <button id="printBtn" class="bg-white text-black px-4 py-2 rounded font-bold text-sm hover:bg-gray-200 transition">
+                    Download as PDF
+                </button>
+                <button id="imageBtn" class="bg-white text-black px-4 py-2 rounded font-bold text-sm hover:bg-gray-200 transition">
+                    Download as Image
+                </button>
+            </div>
         </div>
 
         <!-- Section 1: Seller Info -->
