@@ -2,6 +2,7 @@ const fileInput = document.getElementById('fileInput');
 const skcInput = document.getElementById('skcInput');
 const dashboard = document.getElementById('dashboard');
 const printBtn = document.getElementById('printBtn');
+const imageBtn = document.getElementById('imageBtn');
 const debugMsg = document.getElementById('debug-msg');
 const skcTableBody = document.getElementById('skc-table-body');
 const improvementTableBody = document.getElementById('improvement-table-body');
@@ -247,6 +248,64 @@ window.addEventListener('resize', () => {
 printBtn.addEventListener('click', () => {
     window.focus();
     window.print();
+});
+
+// Image Export Function
+imageBtn.addEventListener('click', async () => {
+    // Show loading state
+    const originalText = imageBtn.textContent;
+    imageBtn.textContent = 'Generating Image...';
+    imageBtn.disabled = true;
+    
+    try {
+        // Hide elements that shouldn't be in the image (no-print class)
+        const noPrintElements = document.querySelectorAll('.no-print');
+        noPrintElements.forEach(el => {
+            el.style.display = 'none';
+        });
+        
+        // Use html2canvas to capture the dashboard
+        const canvas = await html2canvas(dashboard, {
+            backgroundColor: '#ffffff',
+            scale: 2, // Higher quality
+            logging: false,
+            useCORS: true,
+            allowTaint: true,
+            windowWidth: dashboard.scrollWidth,
+            windowHeight: dashboard.scrollHeight
+        });
+        
+        // Restore no-print elements
+        noPrintElements.forEach(el => {
+            el.style.display = '';
+        });
+        
+        // Convert canvas to blob and download
+        canvas.toBlob((blob) => {
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            
+            // Generate filename with current date
+            const now = new Date();
+            const dateStr = now.toISOString().split('T')[0];
+            const shopName = document.getElementById('ui-shop-name')?.textContent?.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '') || 'report';
+            link.download = `SHEIN_AM_Dashboard_${shopName}_${dateStr}.png`;
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }, 'image/png');
+        
+    } catch (error) {
+        console.error('Error generating image:', error);
+        alert('Error generating image. Please try again.');
+    } finally {
+        // Restore button state
+        imageBtn.textContent = originalText;
+        imageBtn.disabled = false;
+    }
 });
 
 // Function to find SKC data by SKC ID
